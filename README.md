@@ -1,1 +1,1 @@
-# cxx-test-util
+# minimal cxx-test-util
