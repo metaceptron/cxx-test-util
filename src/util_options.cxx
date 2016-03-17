@@ -33,15 +33,15 @@ bool Options::parse(int argc, char** argv)
 
 	try {
 		po::options_description options("Generic");
-		string stropt;
-		int intopt;
-		bool boolopt;
 
 		options.add_options()
 			("help,h", "display this help")
 			("verbose,v",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
 			 "verbose run")
+			("debug,D",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "debug run")
 			;
 
 		all_.add(options);

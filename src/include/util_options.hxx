@@ -36,7 +36,12 @@ public:
 
 	inline bool is_verbose() const
 	{
-		return (vm_["debug"].as<bool>() || vm_["verbose"].as<bool>());
+		return (vm_["verbose"].as<bool>());
+	}
+
+	inline bool is_debug() const
+	{
+		return (vm_["debug"].as<bool>());
 	}
 
 protected:

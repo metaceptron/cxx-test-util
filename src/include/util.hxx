@@ -455,9 +455,17 @@ protected:
 class TestDaemon
 {
 public:
+	TestDaemon() = default;
+	TestDaemon(bool verbose = false);
+	virtual ~TestDaemon() = default;
+
 	virtual void set_arguments(std::vector<std::string>& args) = 0;
 	virtual bool is_ready() const { return true; }
 	virtual pid_t get_pid() const = 0;
+
+	virtual bool is_verbose() const final;
+protected:
+	bool is_verbose_ = false;
 };
 
 class ProcessTest

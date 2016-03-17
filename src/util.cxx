@@ -64,6 +64,16 @@ void initialize_test_env(const Options&)
 // test util continues
 namespace test {
 
+TestDaemon::TestDaemon(bool verbose)
+	: is_verbose_(verbose)
+{
+}
+
+bool TestDaemon::is_verbose() const
+{
+	return is_verbose_;
+}
+
 
 ProcessTest::ProcessTest(std::unique_ptr<TestDaemon> daemon,
 						 UnitTest& unit_test)
@@ -87,6 +97,8 @@ int ProcessTest::run(int argc, char** argv)
 	std::vector<std::string> args;
 	daemon_->set_arguments(args);
 
+	bool verbose_run = (options.is_verbose() || daemon_->is_verbose());
+
 	int test_result = -1;
 	int status;
 	pid_t pid = fork();
@@ -106,6 +118,12 @@ int ProcessTest::run(int argc, char** argv)
 		std::string program = args[0];
 
 		std::cout << "## Starting daemon" << std::endl;
+		if(options.is_debug() || daemon_->is_verbose()) {
+			for(auto& it :args) {
+				std::cout << it << "\n";
+			}
+			std::cout << std::endl;
+		}
 		if(execv(program.c_str(), arguments) == -1) {
 			std::cerr << "execv() failed: " << strerror(errno) << std::endl;
 			return false;
@@ -121,7 +139,7 @@ int ProcessTest::run(int argc, char** argv)
 			test_result = unit_test_.run(options);
 		}
 		else {
-			std::cout << "## WARNING: Daemon not ready, "
+			std::cerr << "## ERROR: Daemon not ready, "
 					  << "test cases will not be run" << std::endl;
 		}
 
@@ -135,11 +153,13 @@ int ProcessTest::run(int argc, char** argv)
 						  << strerror(errno) << std::endl;
 			}
 
-			int wait_loops = 20;
+			int wait_loops = 50;
 
 			while(kill(daemon_pid, 0) == 0 && wait_loops) {
-				std::cout << ".";
-				usleep(500 * 1000);
+				if(verbose_run) {
+					std::cout << ".";
+				}
+				usleep(100 * 1000);
 				wait_loops--;
 			}
 
