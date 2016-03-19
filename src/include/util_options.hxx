@@ -34,15 +34,8 @@ public:
 	bool has_help() const;
 	void display_help() const;
 
-	inline bool is_verbose() const
-	{
-		return (vm_["verbose"].as<bool>());
-	}
-
-	inline bool is_debug() const
-	{
-		return (vm_["debug"].as<bool>());
-	}
+	bool is_verbose() const;
+	bool is_debug() const;
 
 protected:
 	po::variables_map vm_;

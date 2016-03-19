@@ -42,6 +42,12 @@ bool Options::parse(int argc, char** argv)
 			("debug,D",
 			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
 			 "debug run")
+			("no-cleanup,N",
+			 po::value<bool>()->implicit_value(true)->zero_tokens()->default_value(false),
+			 "do not clean logs/tmp")
+			("logfile,l",
+			 po::value<std::string>()->default_value(""),
+			 "logfile ")
 			;
 
 		all_.add(options);
@@ -63,6 +69,16 @@ bool Options::has_help() const
 void Options::display_help() const
 {
 	std::cout << all_ << std::endl;
+}
+
+bool Options::is_verbose() const
+{
+	return get<bool>("verbose");
+}
+
+bool Options::is_debug() const
+{
+	return get<bool>("debug");
 }
 
 } // test

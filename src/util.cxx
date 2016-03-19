@@ -1,6 +1,7 @@
 #include "include/util.hxx"
 #include "include/util_options.hxx"
 
+#include <iostream>
 #include <sys/wait.h>
 #include <errno.h>
 #include <cstdlib>
@@ -25,7 +26,7 @@ void initialize_test_env(const Options& options)
 {
 	el::Configurations conf;
 
-	bool is_verbose = options.get<bool>("verbose");
+	bool is_verbose = options.is_verbose();
 
 	conf.setGlobally(
 		el::ConfigurationType::ToStandardOutput,
@@ -35,6 +36,13 @@ void initialize_test_env(const Options& options)
 		el::ConfigurationType::Enabled,
 		(is_verbose ? "true" : "false"));
 
+	std::string logfile = options.get<std::string>("logfile");
+	if(!logfile.empty()) {
+		conf.setGlobally(el::ConfigurationType::Filename, logfile);
+	}
+
+	el::Loggers::addFlag(el::LoggingFlag::AutoSpacing);
+	el::Loggers::addFlag(el::LoggingFlag::ImmediateFlush);
 	el::Helpers::setCrashHandler(crash_handler);
 	el::Loggers::reconfigureAllLoggers(conf);
 
@@ -74,6 +82,10 @@ bool TestDaemon::is_verbose() const
 	return is_verbose_;
 }
 
+void TestDaemon::set_no_cleanup(bool state)
+{
+	no_cleanup_ = state;
+}
 
 ProcessTest::ProcessTest(std::unique_ptr<TestDaemon> daemon,
 						 UnitTest& unit_test)
@@ -93,6 +105,8 @@ int ProcessTest::run(int argc, char** argv)
 		options.display_help();
 		return 0;
 	}
+
+	daemon_->set_no_cleanup(options.get<bool>("no-cleanup"));
 
 	std::vector<std::string> args;
 	daemon_->set_arguments(args);
@@ -175,5 +189,71 @@ int ProcessTest::run(int argc, char** argv)
 	return test_result;
 }
 
+UnitTest::UnitTest(const Configuration& config)
+	: config_(config)
+{
+}
+
+void UnitTest::test_case(const std::string& name,
+						 TestCase::TestFunction_t code)
+{
+	cases_.push_back(std::make_pair(name, code));
+}
+
+int UnitTest::run(int argc, char** argv)
+{
+	Options options;
+	if(!options.parse(argc, argv)) {
+		return -1;
+	}
+
+	if(options.has_help()) {
+		options.display_help();
+		return 0;
+	}
+
+	return run(options_);
+}
+
+int UnitTest::run(const Options& options)
+{
+	config_.verbose = options.is_verbose();
+
+	initialize_test_env(options);
+
+	int i = 0;
+	for(auto& it : cases_) {
+		try	{
+			i++;
+			std::cout << std::setw(3) <<  std::left << i << " - "
+					  << std::setw(59) << it.first << " - ";
+
+			TestCase tcase(config_, it.first);
+			try {
+				it.second(tcase);
+			}
+			catch(const AssertionFailed& e) {
+				failed_.push_back(it.first);
+				std::cout << "ASSERTION FAILED" << std::endl;
+				break;
+			}
+
+			size_t failures = tcase.failures_count();
+			if(failures) {
+				failed_.push_back(it.first);
+			}
+
+			std::cout << (config_.verbose ? "\n" : "")
+					  << (failures ? "FAIL" : "PASS") << std::endl;
+		}
+		catch(const std::exception& e) {
+			failed_.push_back(it.first);
+			std::cout << "FAIL: " << it.first << "\n"
+					  << "\t" << e.what() << std::endl;
+		}
+	}
+
+	return failed_.size();
+}
 
 } // test
