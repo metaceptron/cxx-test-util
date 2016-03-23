@@ -79,7 +79,17 @@ TestDaemon::TestDaemon(bool verbose)
 
 bool TestDaemon::is_verbose() const
 {
-	return is_verbose_;
+	return (is_debug() || is_verbose_);
+}
+
+bool TestDaemon::is_debug() const
+{
+	return is_debug_;
+}
+
+void TestDaemon::set_debug(bool state)
+{
+	is_debug_ = state;
 }
 
 void TestDaemon::set_no_cleanup(bool state)
@@ -110,6 +120,7 @@ int ProcessTest::run(int argc, char** argv)
 
 	std::vector<std::string> args;
 	daemon_->set_arguments(args);
+	daemon_->set_debug(options.is_debug());
 
 	bool verbose_run = (options.is_verbose() || daemon_->is_verbose());
 

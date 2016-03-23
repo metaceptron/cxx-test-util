@@ -414,11 +414,15 @@ public:
 	virtual bool is_ready() const { return true; }
 
 	virtual bool is_verbose() const final;
+	virtual bool is_debug() const final;
 
 	virtual void set_no_cleanup(bool state = true) final;
+	virtual void set_debug(bool state) final;
+
 	virtual void cleanup() const {}
 protected:
 	bool is_verbose_ = false;
+	bool is_debug_ = false;
 	bool no_cleanup_ = false;
 };
 
