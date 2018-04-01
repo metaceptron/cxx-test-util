@@ -1,11 +1,19 @@
 # minimal cxx-test-util
 
-Depends on boost::program_options.
+Depends on:
+- boost::program_options
+- easyloggingpp (optional)
+
+Supports spawning an external daemon to be tested (eg. an API daemon).
+For daemon support inherit TestDaemon class.
+
+
 
 
 ```cpp
 using namespace test;
 Configuration config;
+
 UnitTest unit(config);
 
 int i_value = 100;
